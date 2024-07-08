@@ -1,5 +1,8 @@
 const User = require("../models/User")
 const bcrypt = require("bcrypt")
+const generateOTP = require('../utility/generateOtp')
+const tempOtpStorage = require("../utility/tembstorage")
+const sendOTPEmail = require('../utility/nodemailer')
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 module.exports={
 
@@ -15,8 +18,7 @@ module.exports={
     },
 
 
-
-      signupPOST: async (req, res) => {
+  signupPOST: async (req, res) => {
         try {
             const { name, email, password, confirmpassword } = req.body;
             console.log('Received data:', req.body);
@@ -42,21 +44,34 @@ module.exports={
             if (existingUser) {
                 return res.status(400).json({ email: "Email already exists. Please use a different email" });
             }
+
             const saltRounds = 10;
             const hashedpassword = await bcrypt.hash(password, saltRounds);
 
+            const otp = generateOTP();
+            await sendOTPEmail(email, otp);
+
+            // Store OTP temporarily
+            tempOtpStorage.set(email, otp);
+            console.log(otp, "otp");
+            console.log(tempOtpStorage, 'tempstorage');
+
+            // Create new user but don't save yet
             const newUser = new User({
                 name,
                 email,
                 password: hashedpassword,
             });
+
+            // Save the user after sending the OTP email
             await newUser.save();
+
             // Respond with success message
-            res.status(201).json({ message: 'User registered successfully' });
+            return res.status(201).json({ message: 'OTP sent to your email. Please verify to complete registration.' });
+
         } catch (error) {
             console.error('Error registering user:', error);
-            res.status(500).json({ message: 'Internal server error' });
+            return res.status(500).json({ message: 'Internal server error' });
         }
     }
-
-}
+};
