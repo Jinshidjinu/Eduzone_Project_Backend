@@ -1,9 +1,16 @@
-
-
-const tempStorage = new Map();
+const tempOtpStorage = new Map();
 
 module.exports = {
-  set: (key, value) => tempStorage.set(key, value),
-  get: (key) => tempStorage.get(key),
-  delete: (key) => tempStorage.delete(key)
+    set: (email, otp) => {
+        tempOtpStorage.set(email, otp);
+        setTimeout(() => {
+            tempOtpStorage.delete(email);
+        }, 300000); // OTP expires in 5 minutes
+    },
+    get: (email) => {
+        return tempOtpStorage.get(email);
+    },
+    delete: (email) => {
+        tempOtpStorage.delete(email);
+    }
 };

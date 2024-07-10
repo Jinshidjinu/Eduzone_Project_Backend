@@ -5,6 +5,7 @@ const { validateSignup } = require("../middlewares/validation")
 
 router.post("/login",AuthController.loginPOST)
 router.post("/signup",AuthController.signupPOST)
+router.post("/verifyOtp",AuthController.VerifyOtpPOST)
 
 
 module.exports = router;

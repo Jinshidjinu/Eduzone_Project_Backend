@@ -4,6 +4,9 @@ const generateOTP = require('../utility/generateOtp')
 const tempOtpStorage = require("../utility/tembstorage")
 const sendOTPEmail = require('../utility/nodemailer')
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+
+
 module.exports={
 
     loginPOST :async (req,res) =>{
@@ -56,7 +59,6 @@ module.exports={
             console.log(otp, "otp");
             console.log(tempOtpStorage, 'tempstorage');
 
-            // Create new user but don't save yet
             const newUser = new User({
                 name,
                 email,
@@ -73,5 +75,52 @@ module.exports={
             console.error('Error registering user:', error);
             return res.status(500).json({ message: 'Internal server error' });
         }
-    }
+    },
+
+   
+
+    VerifyOtpPOST: async (req, res) => {
+        try {
+            const { email, otpString } = req.body;
+    
+            console.log("email .....", email);
+            console.log('Received OTP:', otpString);
+            console.log('Full request body:', req.body);
+
+            const user = await User.findOne({ email });
+            if (!user) {
+                return res.status(400).json({ message: 'User not found' });
+            }
+     
+            const storedOtp = tempOtpStorage.get(email);
+            console.log('Stored OTP:', storedOtp);
+          
+            if (!storedOtp) {
+                return res.status(400).json({ message: 'OTP has expired or not found' });
+            }
+          
+            if (storedOtp === otpString) {
+                tempOtpStorage.delete(email);
+                 
+                await User.updateOne({email:email},
+                    {
+                    $set: {verified:true}
+                }
+            )
+
+                return res.status(200).json({ message: 'OTP verified successfully' });
+            } else {
+                return res.status(400).json({ message: 'Invalid OTP' });
+            }
+        } catch (error) {
+            console.error('Error in VerifyOtpPOST:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+      }
+
+
+
+
+
+
 };
