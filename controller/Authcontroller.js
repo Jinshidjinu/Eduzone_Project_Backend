@@ -140,6 +140,29 @@ module.exports={
             console.error('Error in VerifyOtpPOST:', error);
             return res.status(500).json({ message: 'Internal server error' });
         }
+      },
+
+
+
+      TeachersLogin:async (req,res) =>{
+         try {
+            
+         } catch (error) {
+            console.log(error);
+            
+         }
+  
+
+      },
+
+
+      TeachersSignup:async(req,res) =>{
+        try {
+            
+        } catch (error) {
+            console.log(error);
+            
+        }
       }
 
 

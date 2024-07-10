@@ -7,7 +7,9 @@ const TeacherScheama = new mongoose.Schema({
     },
     email:{
         type:String,
-        required:true
+        required:true,
+        unique: true, // Ensures email is unique in the database
+        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ // Basic email format validation
     },
     password:{
         type:String,

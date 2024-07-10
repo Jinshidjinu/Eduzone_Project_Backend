@@ -6,6 +6,8 @@ const { validateSignup } = require("../middlewares/validation")
 router.post("/login",AuthController.loginPOST)
 router.post("/signup",AuthController.signupPOST)
 router.post("/verifyOtp",AuthController.VerifyOtpPOST)
+router.post('/MentorLogin',AuthController.TeachersLogin)
+router.post('/MentorSignup',AuthController.TeachersSignup)
 
 
 module.exports = router;
