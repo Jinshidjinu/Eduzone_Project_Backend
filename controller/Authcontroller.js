@@ -9,15 +9,40 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 module.exports={
 
-    loginPOST :async (req,res) =>{
-      
-      try {
-           
-          return res.status(200).json({message:"seta"})
+    loginPOST: async (req, res) => {
+        try {
+            const { LoginData } = req.body;
+            console.log(LoginData);
 
-      } catch (error) {
-        console.log(error);
-      }
+            if (!LoginData.email || !LoginData.password) {
+                return res.status(400).json({ message: "Email and password are required" });
+            }
+
+            if (!emailRegex.test(LoginData.email)) {
+                return res.status(400).json({ message: "Invalid email format" });
+            }
+
+            const user = await User.findOne({ email: LoginData.email });
+
+            if (!user) {
+                return res.status(401).json({ message: "Invalid email or password" });
+            }
+
+            if (!user.verified) {
+                return res.status(403).json({ message: "Please verify your email before logging in" });
+            }
+
+            const validPassword = await bcrypt.compare(LoginData.password, user.password);
+
+            if (!validPassword) {
+                return res.status(401).json({ message: "Invalid password" });
+            }
+
+            return res.status(200).json({ message: "Login successful" });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: "Internal server error" });
+        }
     },
 
 
@@ -107,7 +132,6 @@ module.exports={
                     $set: {verified:true}
                 }
             )
-
                 return res.status(200).json({ message: 'OTP verified successfully' });
             } else {
                 return res.status(400).json({ message: 'Invalid OTP' });
