@@ -1,4 +1,5 @@
 const User = require("../models/User")
+const Teachers   = require('../models/Teacher')
 const bcrypt = require("bcrypt")
 const generateOTP = require('../utility/generateOtp')
 const tempOtpStorage = require("../utility/tembstorage")
@@ -110,7 +111,7 @@ module.exports={
     
             console.log("email .....", email);
             console.log('Received OTP:', otpString);
-            console.log('Full request body:', req.body);
+           
 
             const user = await User.findOne({ email });
             if (!user) {
@@ -158,13 +159,61 @@ module.exports={
 
       TeachersSignup:async(req,res) =>{
         try {
-            
-        } catch (error) {
-            console.log(error);
-            
-        }
-      }
+            const { name, email, password, confirmpassword } = req.body;
+            console.log('Received data for teacher:', req.body);
 
+            // Validation
+            if (!name || !email || !password || !confirmpassword) {
+                return res.status(400).json({ required: "All fields are required" });
+            }
+
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({ email: "Invalid email format" });
+            }
+
+            if (password.length < 8) {
+                return res.status(400).json({ password: "Password must be at least 8 characters long" });
+            }
+
+            if (password !== confirmpassword) {
+                return res.status(400).json({ confirmpassword: "Passwords do not match" });
+            }
+
+            const existingTeacher = await Teachers.findOne({ email });
+            if (existingTeacher) {
+                return res.status(400).json({ email: "Email already exists. Please use a different email" });
+            }
+
+            const saltRounds = 10;
+            const hashedpassword = await bcrypt.hash(password, saltRounds);
+
+            const otp = generateOTP();
+            await sendOTPEmail(email, otp);
+
+            // Store OTP temporarily
+            tempOtpStorage.set(email, otp);
+            console.log(otp, "otp");
+            console.log(tempOtpStorage, 'tempstorage');
+
+            const newTeacher = new Teachers({
+                name,
+                email,
+                password: hashedpassword,
+            });
+
+            await newTeacher.save();
+
+            // Respond with success message
+            return res.status(201).json({ message: 'OTP sent to your email. Please verify to complete registration.' });
+
+        } catch (error) {
+            console.log('Error registering teacher:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+      },
+
+
+    
 
 
 

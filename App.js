@@ -6,6 +6,7 @@ const mongoose = require("mongoose")
 require("dotenv").config()
 const PORT = process.env.PORT || 5000
 const authRouter = require("./routes/UserRouter")
+const TeachersRouter = require('./routes/TeachersRouter')
 
 //middlewares
 
@@ -17,6 +18,7 @@ app.use(express.json());
 
 
 app.use("/api",authRouter)
+app.use("/api",TeachersRouter)
 
 
 
