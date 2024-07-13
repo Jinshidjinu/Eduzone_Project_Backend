@@ -147,9 +147,38 @@ module.exports={
 
       TeachersLogin:async (req,res) =>{
          try {
-            
+
+            const {LoginData} = req.body
+            console.log(LoginData,'JINUUP')
+
+            if (!LoginData.email || !LoginData.password) {
+                return res.status(400).json({ message: "Email and password are required" });
+            }
+
+            if (!emailRegex.test(LoginData.email)) {
+                return res.status(400).json({ message: "Invalid email format" });
+            }
+
+            const Faculty = await Teachers.findOne({ email: LoginData.email });
+
+            if (!Faculty) {
+                return res.status(401).json({ message: "Invalid email or password" });
+            }
+
+            if (!Faculty.verified) {
+                return res.status(403).json({ message: "Please verify your email before logging in" });
+            }
+
+            const validPassword = await bcrypt.compare(LoginData.password, Faculty.password);
+
+            if (!validPassword) {
+                return res.status(400).json({ message: "Invalid password" });
+            }
+             
+            return res.status(200).json({message:"Login Successfully"})
+
          } catch (error) {
-            console.log(error);
+            return res.status(500).json({ message: "Internal server error" });
             
          }
   
@@ -213,11 +242,10 @@ module.exports={
       },
 
 
+
       facultyverifyOtp: async (req,res) =>{
         try {
             const {email,otpString} =req.body
-
-            console.log(email,otpString ,"jinumon");
 
             const Fuculty = await Teachers.findOne({email})
              
@@ -231,7 +259,7 @@ module.exports={
                     return res.status(400).json({ message: 'OTP has expired or not found' });
 
             }
-
+            
             if(FacultyStoredOtp === otpString){
                 tempOtpStorage.delete(email)
                 await Teachers.updateOne({email:email},
@@ -248,7 +276,10 @@ module.exports={
             console.error('Error in VerifyOtpPOST:', error);
             return res.status(500).json({ message: 'Internal server error' });  
         }
-      }
+      },
+
+
+
 
 
 
