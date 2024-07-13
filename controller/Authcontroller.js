@@ -213,7 +213,43 @@ module.exports={
       },
 
 
-    
+      facultyverifyOtp: async (req,res) =>{
+        try {
+            const {email,otpString} =req.body
+
+            console.log(email,otpString ,"jinumon");
+
+            const Fuculty = await Teachers.findOne({email})
+             
+            if (!Fuculty) {
+               return res.status(400).json({message:" Teacher is not found "})
+            } 
+             const FacultyStoredOtp = tempOtpStorage.get(email)
+             console.log(FacultyStoredOtp  , 'faculty stored otp'); 
+
+            if(!FacultyStoredOtp ){
+                    return res.status(400).json({ message: 'OTP has expired or not found' });
+
+            }
+
+            if(FacultyStoredOtp === otpString){
+                tempOtpStorage.delete(email)
+                await Teachers.updateOne({email:email},
+                    {
+                    $set: {verified:true}
+                }
+                )
+                return res.status(200).json({ message: 'OTP verified successfully' });
+            }else{
+                return res.status(400).json({ message: 'Invalid OTP' });
+            }
+            
+        } catch (error) {
+            console.error('Error in VerifyOtpPOST:', error);
+            return res.status(500).json({ message: 'Internal server error' });  
+        }
+      }
+
 
 
 
